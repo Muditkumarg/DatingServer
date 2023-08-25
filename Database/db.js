@@ -2,8 +2,7 @@ const mongoose = require('mongoose')
 const dotenv = require('dotenv');
 dotenv.config();
 
-mongoose.connect(// process.env.MONGO_DB_URI,
-'mongodb://127.0.0.1:27017/DatingProject',    
+mongoose.connect(// process.env.MONGO_DB_URI,   
     {
     useNewUrlParser:true,useunifiedtopology:true, 
 }).then(()=>{
