@@ -77,9 +77,7 @@ const friendRequestSchema = new mongoose.Schema({
     sender: { type: mongoose.Schema.Types.ObjectId, ref: 'UserSignUp', required: true },
     receiver: { type: mongoose.Schema.Types.ObjectId, ref: 'UserSignUp', required: true },
     status: { type: String, enum: ['pending', 'Friend', 'rejected'], default: 'pending' },
-    notification: {
-        type: String,anum:["0","1"]
-    },
+    isSeen:{ type: Boolean, default: false },
     timestamp: {
         type: Date,
         default: Date.now
@@ -96,6 +94,10 @@ const profileLikeSchema = new mongoose.Schema({
     receiver: { type: mongoose.Schema.Types.ObjectId, ref: 'UserSignUp', required: true },
     status: { type: String, enum: ['Like', 'Liked', 'rejected'], default: 'Liked' },
     isSeen:{ type: Boolean, default: false },
+    timestamp: {
+        type: Date,
+        default: Date.now
+    }
     // other friend request-related fields
 });
 const ProFileLikeData = mongoose.model('ProfileLike', profileLikeSchema);
@@ -108,6 +110,7 @@ const messageSchema = mongoose.Schema({
         type: String
     },
     isRead: { type: Boolean, default: false },
+    isSeen:{ type: Boolean, default: false },
     timestamp: {
         type: Date,
         default: Date.now

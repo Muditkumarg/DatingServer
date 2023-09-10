@@ -42,7 +42,6 @@ io.on("connection", (socket) => {
 
     socket.on("login", async (email) => {
         // Emit user's online status to everyone 
-        console.log(email)
         try {
             const sender = await userData.findOne({ email: email });
 
@@ -70,8 +69,6 @@ io.on("connection", (socket) => {
         const logOutUserStatus = await sender.save();
         const allUsersData = await userData.find({}, { password: 0, })
         io.emit("user-status", allUsersData);
-
-        console.log(sender)
     })
 
     // <----------------------------------Get all Message By reciverRefrenceId----------------------->
@@ -86,10 +83,29 @@ io.on("connection", (socket) => {
             const unreadMessages = await userMessage.find({
                 $and: [
                     { receiver: receiver._id },
-                    { isRead: false } // Filter unread messages
+                    { isRead: false }, // Filter unread messages
+                  
                 ]
             }).sort({ createdAt: 1 });
             io.to(roomName).emit("recievealluser-message", { messages: unreadMessages });
+        } catch (error) {
+            console.error("Error fetching and emitting messages:", error);
+        }
+    })
+    socket.on("send-chstnotify",async (data)=>{
+        console.log("sendRef",data.recieverRefrenceId);
+        const roomName = data.recieverRefrenceId;
+        socket.join(roomName);
+        try {
+            const receiver = await userData.findOne({ refrenceId: data.recieverRefrenceId });
+    
+            const unreadMessages = await userMessage.find({
+                $and: [
+                    { receiver: receiver._id },
+                    { isSeen: false }, // Filter unread messages
+                ]
+            }).sort({ createdAt: 1 });
+            io.to(roomName).emit("recievealluser-messageNotification", { messages: unreadMessages });
         } catch (error) {
             console.error("Error fetching and emitting messages:", error);
         }
@@ -101,6 +117,7 @@ io.on("connection", (socket) => {
         const roomName = generateRoomName(data.senderRefrenceId, data.recieverRefrenceId);
         socket.join(roomName);
         console.log(`User joined room: ${roomName}`);
+        
 
         try {
             const sender = await userData.findOne({ refrenceId: data.senderRefrenceId });
@@ -139,6 +156,7 @@ io.on("connection", (socket) => {
                     receiver: receiver._id,
                     message: data.message.message,
                     isRead: false,
+                    isSeen:false
                 });
                 await newMessage.save();
     
@@ -159,13 +177,9 @@ io.on("connection", (socket) => {
     });
     socket.on("mark-all-messages-as-read", async (data) => {
         const { senderRefrenceId, recieverRefrenceId } = data;
-    console.log("Ffg",senderRefrenceId,recieverRefrenceId)
         try {
-            
             const sender = await userData.findOne({ refrenceId: senderRefrenceId });
             const receiver = await userData.findOne({ refrenceId:recieverRefrenceId });
-            console.log("Sende",sender._id)
-            console.log("Rec",receiver._id)
 
         await userMessage.updateMany(
                 {
@@ -173,7 +187,7 @@ io.on("connection", (socket) => {
                     receiver:sender._id,
                     isRead: false
                 },
-                { $set: { isRead: true } }
+                { $set: { isRead: true }}
             );
 
             const readMessage = await userMessage.find({receiver:receiver._id})
@@ -184,8 +198,6 @@ io.on("connection", (socket) => {
         }
     })
 })
-
-
 
 server.listen(5000, () => {
     console.log("port 5000 activate")
